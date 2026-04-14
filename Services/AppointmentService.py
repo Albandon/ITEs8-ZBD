@@ -4,7 +4,7 @@ def get_appointment_by_id(conn, app_id: int):
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT id, doctor_id, patient_id, treatment_id, time, status, room_id
+        SELECT id, doctor_id, patient_id, treatment_id, "time", status, room_id
         FROM "Appointments"
         WHERE id = %s
     """, (app_id,))
@@ -27,7 +27,7 @@ def get_appointment_by_id(conn, app_id: int):
 def get_appointments_by_patient_id(conn, patient_id: int):
     cur = conn.cursor()
     cur.execute("""
-        SELECT id, doctor_id, patient_id, treatment_id, time, status, room_id
+        SELECT id, doctor_id, patient_id, treatment_id, "time", status, room_id
         FROM "Appointments"
         WHERE patient_id = %s
     """, (patient_id,))
@@ -56,7 +56,7 @@ def create_appointment(conn, app_data: AppointmentDTO):
 
     cur.execute("""
         SELECT 1 FROM "Appointments"
-        WHERE doctor_id = %s AND time = %s
+        WHERE doctor_id = %s AND "time" = %s
     """, (app_data.doctor_id, app_data.time))
 
     if cur.fetchone():
@@ -64,7 +64,7 @@ def create_appointment(conn, app_data: AppointmentDTO):
 
     cur.execute("""
         INSERT INTO "Appointments"
-        (doctor_id, patient_id, treatment_id, time, status, room_id)
+        (doctor_id, patient_id, treatment_id, "time", status, room_id)
         VALUES (%s, %s, %s, %s, %s, %s)
         RETURNING id
     """, app_data.map())

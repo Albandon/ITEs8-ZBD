@@ -24,7 +24,7 @@ def search_doctors_by_speciality_id(conn, speciality_id: int):
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT id, first_name || ' ' || last_name AS name
+        SELECT d.id, first_name || ' ' || last_name AS name
         FROM "Doctors" d
         JOIN "DoctorsSpecialities" ds ON ds.doctor_id = d.id
         WHERE ds.speciality_id = %s
@@ -92,7 +92,7 @@ def update_doctor(conn, doctor_info: CreateDoctorDTO):
         UPDATE "Doctors"
         SET first_name = %s, last_name = %s, sex = %s
         WHERE id = %s
-    """, (doctor_info.map(),))
+    """, doctor_info.map())
 
     conn.commit()
 

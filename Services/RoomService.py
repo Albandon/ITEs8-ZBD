@@ -24,8 +24,8 @@ def get_rooms_by_speciality_id(conn, speciality_id: int):
     cur = conn.cursor()
 
     cur.execute("""
-    SELECT * FROM "Rooms"
-    WHERE speciality_id = %s
+        SELECT * FROM "Rooms"
+        WHERE speciality_id = %s
     """, (speciality_id,))
 
     data = cur.fetchall()
@@ -89,7 +89,7 @@ def create_room(conn, room_info: CreateRoomDTO):
         INSERT INTO "Rooms" (speciality_id, clinic_id, room_name)
         VALUES (%s, %s, %s)
         RETURNING id
-    """, (room_info.map(),))
+    """, room_info.map())
 
     room_id = cur.fetchone()[0]
     conn.commit()
