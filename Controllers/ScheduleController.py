@@ -46,3 +46,14 @@ def update_regular_schedule(schedule: CreateScheduleRegularDTO):
 
     con.close()
     return {"message": "Regular schedule updated"}
+
+@router.get("/available")
+def get_available_slots(doctor_id: int, treatment_id: int):
+    con = db.get_connection()
+    slots = Scs.get_available_slots(con, doctor_id, treatment_id)
+    con.close()
+
+    if slots is None:
+        raise HTTPException(status_code=404, detail="Treatment not found")
+
+    return slots

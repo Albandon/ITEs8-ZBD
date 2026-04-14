@@ -68,12 +68,13 @@ def modify_schedule_single_day(conn, schedule_mod: CreateScheduleModificationDTO
 
     # add new blocks
     cur.execute("""
-            INSERT INTO "DoctorSchedules" (doctor_id, block_start, room_id, date)
+            INSERT INTO "DoctorSchedules" (doctor_id, block_start, room_id, date, modified)
             SELECT
                 %s,
                 t,
                 %s,
-                %s
+                %s,
+                TRUE
             FROM generate_series(%s, %s - interval '15 minutes', interval '15 minutes') AS t
         """, (
         schedule_mod.doctor_id,
@@ -135,3 +136,51 @@ def update_regular_schedule(conn, schedule_info: CreateScheduleRegularDTO):
     ))
 
     conn.commit()
+
+def get_available_slots(conn, doctor_id: int, treatment_id: int, date_from: date = date.today(), date_to: date = date.today() + timedelta(days=300)):
+    cur = conn.cursor()
+
+    # extract estimated blocks number for the treatment
+    cur.execute("""
+        SELECT estimated_blocks
+        FROM "Treatments"
+        WHERE id = %s
+    """, (treatment_id,))
+
+    row = cur.fetchone()
+    if not row:
+        return None
+
+    estimated_blocks = row[0]
+
+    # find starting blocks for which the next (estimated_blocks - 1) blocks exist and are also free
+    cur.execute("""
+        SELECT ds.id, ds.date, ds.block_start, ds.room_id
+        FROM "DoctorSchedules" ds
+        JOIN "Rooms" r ON r.id = ds.room_id
+        JOIN "Treatments" t on t.id = %s AND t.speciality_id = r.speciality_id
+        WHERE ds.doctor_id = %s
+            AND ds.date BETWEEEN %s AND %s
+            AND ds.booked = FALSE
+            -- all required blocks must exist and be available
+            AND (
+                SELECT COUNT(*)
+                FROM "DoctorSchedules" ds2
+                WHERE ds2.doctor_id = ds.doctor_id
+                    AND ds2.date = ds.date
+                    AND ds2.room_id = ds.room_id
+                    AND ds2.block_start >= ds.block_start
+                    AND ds2.block_start < ds.block_start + (%s * interval '15 minutes')
+                    AND ds2.booked = FALSE
+            ) = %s
+        ORDER BY ds.date, ds.block_start
+    """, (treatment_id, doctor_id, date_from, date_to, estimated_blocks, estimated_blocks))
+
+    data = cur.fetchall()
+
+    return [{
+        "id": row[0],
+        "date": row[1],
+        "block_start": row[2],
+        "room_id": row[3]
+    } for row in data]
