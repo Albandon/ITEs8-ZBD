@@ -9,7 +9,7 @@ router = APIRouter(prefix="/appointments", tags=["Appointments"])
 def get_appointment_by_id(appointment_id: int):
     con = db.get_connection()
 
-    appointment = As.get_appointments_by_id(con, appointment_id)
+    appointment = As.get_appointment_by_id(con, appointment_id)
     con.close()
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")

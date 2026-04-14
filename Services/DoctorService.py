@@ -68,7 +68,7 @@ def create_doctor(conn, doctor_info: CreateDoctorDTO):
         INSERT INTO "Doctors" (first_name, last_name, sex)
         VALUES (%s, %s, %s)
         RETURNING id
-    """, (doctor_info.map(),))
+    """, doctor_info.map())
 
     doctor_id = cur.fetchone()[0]
     conn.commit()
@@ -81,7 +81,7 @@ def create_doctor_login_info(conn, doctor_info: CreateDoctorLoginInfoDTO):
     cur.execute("""
         INSERT INTO "DoctorLoginInfo" (doctor_id, email, phone, hash_password, created_at)
         VALUES (%s, %s, %s, %s, current_timestamp)
-    """, (doctor_info.map(pe.hash_password(doctor_info.password)),))
+    """, doctor_info.map(pe.hash_password(doctor_info.password)))
 
     conn.commit()
 

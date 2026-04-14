@@ -2,8 +2,7 @@
 
 def get_connection():
     return pg.connect(
-        database="MedicalApptApp",
-        user="zbd-user",
-        password="zbd-user",
+        user="postgres",
+        password="postgres",
         host="localhost"
     )
