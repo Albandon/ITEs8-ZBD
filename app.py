@@ -7,6 +7,7 @@ import Controllers.RoomController as Rc
 import Controllers.ClinicController as Cc
 import Controllers.TreatmentController as Tc
 import Controllers.ScheduleController as Scc
+import mock
 
 app = FastAPI()
 
@@ -17,3 +18,5 @@ app.include_router(Rc.router)
 app.include_router(Cc.router)
 app.include_router(Tc.router)
 app.include_router(Scc.router)
+
+# mock.generate_mock_data()
