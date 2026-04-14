@@ -1,6 +1,6 @@
 ﻿from DTOs.AppointmentDTOs import AppointmentDTO
 
-def get_appointments_by_id(conn, app_id: int):
+def get_appointment_by_id(conn, app_id: int):
     cur = conn.cursor()
 
     cur.execute("""
@@ -56,8 +56,7 @@ def create_appointment(conn, app_data: AppointmentDTO):
 
     cur.execute("""
         SELECT 1 FROM "Appointments"
-        WHERE doctor_id = %s 
-        AND time = %s
+        WHERE doctor_id = %s AND time = %s
     """, (app_data.doctor_id, app_data.time))
 
     if cur.fetchone():
@@ -65,8 +64,8 @@ def create_appointment(conn, app_data: AppointmentDTO):
 
     cur.execute("""
         INSERT INTO "Appointments"
-        (id, doctor_id, patient_id, treatment_id, time, status, room_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        (doctor_id, patient_id, treatment_id, time, status, room_id)
+        VALUES (%s, %s, %s, %s, %s, %s)
         RETURNING id
     """, app_data.map())
 
