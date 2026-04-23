@@ -21,12 +21,14 @@ def generate_mock_data():
         conn.commit()
 
     except Exception as e:
+        print(f"Exception: {e}")
         conn.rollback()
         raise e
 
     finally:
         conn.close()
         print("Data generated!")
+
 def init(conn):
     treatment = Treatment (
         name="test",
@@ -34,7 +36,7 @@ def init(conn):
         time_blocks="3"
     )
     create_speciality(conn, "test")
-    create_treatment(conn, treatment.map())
+    create_treatment(conn, treatment)
 
 def generate_doctors(conn):
     fname = ["Krzysztof", "Eryk", "Mariusz", "Marek", "Ireneusz", "Piotr", "Arek", "Aleksander", "Karol", "Kacper"]
@@ -65,10 +67,11 @@ def generate_doctors(conn):
     execute_values(cur, """
         INSERT INTO "DoctorsSpecialities" (doctor_id, speciality_id)
         VALUES %s
+        ON CONFLICT DO NOTHING
     """, values)
 
 def generate_clinics(conn):
-    adres = ["Strzegomska", "Świdnicka", "Świebodzka", "Wrocławska", "Wałbrzyska",
+    adress = ["Strzegomska", "Świdnicka", "Świebodzka", "Wrocławska", "Wałbrzyska",
              "Senatorska", "Armi Krajowej", "Kupiecka", "Polna", "Leśna"]
 
     city = ["Wałbrzych", "Wrocław", "Kąty Wrocławskie", "Świdnica",
@@ -79,7 +82,7 @@ def generate_clinics(conn):
 
     for i in range(10):
         for j in range(10):
-            values.append((adres[i] + f" {i+1}/{j+1}", city[j]))
+            values.append((adress[i] + f" {i+1}/{j+1}", city[j]))
 
     cur = conn.cursor()
 
@@ -102,6 +105,7 @@ def generate_rooms(conn):
     execute_values(cur, """
         INSERT INTO "Rooms" (speciality_id, clinic_id, room_name)
         VALUES %s
+        ON CONFLICT DO NOTHING
     """, values)
 
 def generate_schedules(conn):

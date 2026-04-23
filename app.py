@@ -19,4 +19,4 @@ app.include_router(Cc.router)
 app.include_router(Tc.router)
 app.include_router(Scc.router)
 
-# mock.generate_mock_data()
+mock.generate_mock_data()

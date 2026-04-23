@@ -30,7 +30,7 @@ def create_regular_schedule(conn, schedule_info: CreateScheduleRegularDTO):
             %s,
             d::date
         FROM generate_series(%s::date, (%s::date + interval '300 days'), interval '1 day') AS d
-        JOIN generate_series(%s::timestamp, (%s::timestamp - interval '15 minutes'), interval '15 minutes') AS t ON TRUE
+        JOIN generate_series(timestamp '2000-01-01' + %s, (timestamp '2000-01-01' + %s) - interval '15 minutes', interval '15 minutes') AS t ON TRUE
         WHERE EXTRACT(ISODOW FROM d) = %s
     """, (
         schedule_info.doctor_id,
