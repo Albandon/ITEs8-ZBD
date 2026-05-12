@@ -20,22 +20,25 @@ def get_all_clinics(conn):
     ]
 def get_clinic_by_id(conn, clinic_id: int):
     cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT id, address, city
+            FROM "Clinics"
+            WHERE id = %s
+        """, (clinic_id,))
 
-    cur.execute("""
-        SELECT id, address, city
-        FROM "Clinics"
-        WHERE id = %s
-    """, (clinic_id,))
+        data = cur.fetchone()
+        if not data:
+            return None
 
-    data = cur.fetchone()
-    if not data:
-        return None
-
-    return {
-        "id": data[0],
-        "address": data[1],
-        "city": data[2],
-    }
+        return {
+            "id": data[0],
+            "address": data[1],
+            "city": data[2],
+        }
+    except:
+        conn.rollback()
+        raise
 
 def create_clinic(conn, clinic: ClinicDTO):
     cur = conn.cursor()

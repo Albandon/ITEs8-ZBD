@@ -26,11 +26,15 @@ def create_regular_schedule(conn, schedule_info: CreateScheduleRegularDTO):
         INSERT INTO "DoctorSchedules" (doctor_id, block_start, room_id, date)
         SELECT
             %s,
-            t,
+            (t::time),
             %s,
             d
         FROM generate_series(%s, %s, interval '1 day') AS d
-        JOIN generate_series(%s, %s - interval '15 minutes', interval '15 minutes') AS t ON TRUE
+        JOIN generate_series(
+            ('2000-01-01'::date + %s),
+            ('2000-01-01'::date + %s - interval '15 minutes'),
+            interval '15 minutes'
+        ) AS t ON TRUE
         WHERE EXTRACT(ISODOW FROM d) = %s
     """, (
         schedule_info.doctor_id,
