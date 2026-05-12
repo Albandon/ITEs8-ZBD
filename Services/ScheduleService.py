@@ -26,21 +26,17 @@ def create_regular_schedule(conn, schedule_info: CreateScheduleRegularDTO):
         INSERT INTO "DoctorSchedules" (doctor_id, block_start, room_id, date)
         SELECT
             %s,
-            (t::time),
+            t::time,
             %s,
-            d
-        FROM generate_series(%s, %s, interval '1 day') AS d
-        JOIN generate_series(
-            ('2000-01-01'::date + %s),
-            ('2000-01-01'::date + %s - interval '15 minutes'),
-            interval '15 minutes'
-        ) AS t ON TRUE
+            d::date
+        FROM generate_series(%s::date, (%s::date + interval '300 days'), interval '1 day') AS d
+        JOIN generate_series(timestamp '2000-01-01' + %s, (timestamp '2000-01-01' + %s) - interval '15 minutes', interval '15 minutes') AS t ON TRUE
         WHERE EXTRACT(ISODOW FROM d) = %s
     """, (
         schedule_info.doctor_id,
         schedule_info.room_id,
         schedule_info.start_date,
-        schedule_info.start_date + timedelta(days=300),
+        schedule_info.start_date,
         schedule_info.time_from,
         schedule_info.time_to,
         schedule_info.weekday
@@ -75,11 +71,11 @@ def modify_schedule_single_day(conn, schedule_mod: CreateScheduleModificationDTO
             INSERT INTO "DoctorSchedules" (doctor_id, block_start, room_id, date, modified)
             SELECT
                 %s,
-                t,
+                t::time,
                 %s,
-                %s,
+                %s::date,
                 TRUE
-            FROM generate_series(%s, %s - interval '15 minutes', interval '15 minutes') AS t
+            FROM generate_series(%s::timestamp, (%s::timestamp - interval '15 minutes'), interval '15 minutes') AS t
         """, (
         schedule_mod.doctor_id,
         schedule_mod.room_id,
@@ -123,11 +119,11 @@ def update_regular_schedule(conn, schedule_info: CreateScheduleRegularDTO):
         INSERT INTO "DoctorSchedules" (doctor_id, block_start, room_id, date)
         SELECT
             %s,
-            t,
+            t::time,
             %s,
-            d
-        FROM generate_series(%s, %s, interval '1 day') AS d
-        JOIN generate_series(%s, %s - interval '15 minutes', interval '15 minutes') AS t ON TRUE
+            d::date
+        FROM generate_series(%s::date, %s::date, interval '1 day') AS d
+        JOIN generate_series(%s::timestamp, (%s::timestamp - interval '15 minutes'), interval '15 minutes') AS t ON TRUE
         WHERE EXTRACT(ISODOW FROM d) = %s
     """, (
         schedule_info.doctor_id,
@@ -164,7 +160,7 @@ def get_available_slots(conn, doctor_id: int, treatment_id: int, date_from: date
         JOIN "Rooms" r ON r.id = ds.room_id
         JOIN "Treatments" t on t.id = %s AND t.speciality_id = r.speciality_id
         WHERE ds.doctor_id = %s
-            AND ds.date BETWEEEN %s AND %s
+            AND ds.date BETWEEN %s AND %s
             AND ds.booked = FALSE
             -- all required blocks must exist and be available
             AND (

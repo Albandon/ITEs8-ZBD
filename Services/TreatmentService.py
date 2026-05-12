@@ -13,12 +13,12 @@ def get_treatment_by_id (con, t_id: int):
     if not data:
         return None
     
-    return [{
+    return {
         "id": data[0],
         "name": data[1],
         "speciality_id": data[2],
         "time_blocks": data[3]
-    }]
+    }
 
 # TODO: ocenić czy potrzebny
 def get_treatments_by_doctor_id (con, d_id : int):
@@ -37,9 +37,9 @@ def get_treatment_time_by_id (con, t_id: int):
     if not data:
         return None
     
-    return [{
+    return {
         "time_blocks": data[0]
-    }]
+    }
 
 def create_treatment (con, data: TDto):
     cur = con.cursor()
@@ -61,7 +61,7 @@ def update_treatment_time (con, t_id: int, time_blocks: int):
         UPDATE "Treatments"
         SET estimated_blocks = %s
         WHERE id = %s
-    """, (t_id, time_blocks,))
+    """, (time_blocks, t_id))
     
     if cur.rowcount == 0:
         return False
