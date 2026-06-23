@@ -40,17 +40,18 @@ def get_clinic_by_id(conn, clinic_id: int):
         conn.rollback()
         raise
 
-def create_clinic(conn, clinic: ClinicDTO):
+def create_clinic(conn, clinic: ClinicDTO, unique=True):
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT 1 
-        FROM "Clinics"
-        WHERE city = %s AND address = %s
-    """, (clinic.city, clinic.address))
+    if unique:
+        cur.execute("""
+            SELECT 1 
+            FROM "Clinics"
+            WHERE city = %s AND address = %s
+        """, (clinic.city, clinic.address))
 
-    if cur.fetchone():
-        return False
+        if cur.fetchone():
+            return False
 
     cur.execute("""
         INSERT INTO "Clinics"
@@ -63,3 +64,4 @@ def create_clinic(conn, clinic: ClinicDTO):
     conn.commit()
 
     return {"id": clinic_id}
+

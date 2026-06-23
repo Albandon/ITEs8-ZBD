@@ -1,5 +1,7 @@
-﻿from fastapi import FastAPI
-from fastapi_cloud_cli.commands import login
+﻿import asyncio
+import sys
+
+from fastapi import FastAPI
 import Controllers.AppointmentController as Ac
 import Controllers.DoctorController as Dc
 import Controllers.SpecialityController as Sc
@@ -7,7 +9,9 @@ import Controllers.RoomController as Rc
 import Controllers.ClinicController as Cc
 import Controllers.TreatmentController as Tc
 import Controllers.ScheduleController as Scc
-import mock
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 app = FastAPI()
 
@@ -19,4 +23,6 @@ app.include_router(Cc.router)
 app.include_router(Tc.router)
 app.include_router(Scc.router)
 
-mock.generate_mock_data()
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}

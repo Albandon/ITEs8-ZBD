@@ -3,50 +3,40 @@ import csv
 import re
 import sys
 
-# użycie:
-# python benchmark.py "C:\sciezka\do\ab.exe" http://127.0.0.1:8000/clinics/1
-
 if len(sys.argv) < 3:
-    print("Usage:")
-    print(r'python benchmark.py "C:\path\to\ab.exe" <URL>')
+    print('Usage: python benchmark.py "C:\\path\\to\\ab.exe" <URL>')
     sys.exit(1)
 
 AB_PATH = sys.argv[1]
 URL = sys.argv[2]
 
-REQUESTS = 5000
+REQUESTS = [100, 100, 100, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]
 
-# CONCURRENCY_LEVELS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]
+CONCURRENCY_LEVELS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 
 CSV_FILE = "benchmark_results.csv"
 
 results = []
 
-for concurrency in range(25,500,25):
-    print(f"Running test for concurrency = {concurrency}")
+for c in range(len(CONCURRENCY_LEVELS)):
+    print(f"Running benchmark: concurrency={CONCURRENCY_LEVELS[c]}, requests={REQUESTS[c]}")
 
     command = [
         AB_PATH,
-        "-n", str(REQUESTS),
-        "-c", str(concurrency),
+        "-n", str(REQUESTS[c]),
+        "-c", str(CONCURRENCY_LEVELS[c]),
         URL
     ]
 
-    process = subprocess.run(
-        command,
-        capture_output=True,
-        text=True
-    )
-
+    process = subprocess.run(command, capture_output=True, text=True)
     output = process.stdout
 
-    # debug gdy benchmark padnie
     if process.returncode != 0:
-        print(f"Benchmark failed for concurrency={concurrency}")
+        print(f"Benchmark failed for c={CONCURRENCY_LEVELS[c]}")
         print(process.stderr)
 
-    time_match = re.search(
-        r"Time per request:\s+([\d\.]+)\s+\[ms\]\s+\(mean\)",
+    tpr_match = re.search(
+        r"Time per request:\s*([\d.]+)\s*\[ms\]",
         output
     )
 
@@ -60,29 +50,27 @@ for concurrency in range(25,500,25):
         output
     )
 
-    avg_time = float(time_match.group(1)) if time_match else None
+    tpr = float(tpr_match.group(1)) if tpr_match else None
     rps = float(rps_match.group(1)) if rps_match else None
     failed = int(failed_match.group(1)) if failed_match else None
 
     results.append([
-        concurrency,
-        REQUESTS,
-        avg_time,
+        CONCURRENCY_LEVELS[c],
+        REQUESTS[c],
+        tpr,
         rps,
         failed
     ])
 
-with open(CSV_FILE, "w", newline="", encoding="utf-8") as file:
-    writer = csv.writer(file)
-
+with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
     writer.writerow([
         "Concurrency",
         "Requests",
-        "Average Time per Request (ms)",
+        "Time per Request (ms)",
         "Requests per Second",
         "Failed Requests"
     ])
-
     writer.writerows(results)
 
-print(f"Results saved to {CSV_FILE}")
+print(f"Saved to {CSV_FILE}")

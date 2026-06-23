@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
-import db
+from db import get_read_conn, get_write_conn, primary_pool, _replica_cycle
+import itertools
 import Services.TreatmentService as Ts
 from DTOs.TreatmentDTOs import Treatment as TDto
 
@@ -7,32 +8,43 @@ router = APIRouter(prefix="/treatments", tags=["Treatments"])
 
 @router.get("/{treat_id}")
 def get_treatment_by_id(t_id: int):
-    con = db.get_connection()
-    result = Ts.get_treatment_by_id(con, t_id)
-    con.close()
+    con, pool = get_read_conn()
+    try:
+        result = Ts.get_treatment_by_id(con, t_id)
+    finally:
+        pool.putconn(con)
+
     return result
 
 @router.get("/{treat_id}/time")
 def get_treatment_time(t_id: int):
-    con = db.get_connection()
-    result = Ts.get_treatment_time_by_id(con, t_id)
-    con.close()
+    con, pool = get_read_conn()
+    try:
+        result = Ts.get_treatment_time_by_id(con, t_id)
+    finally:
+        pool.putconn(con)
+
     return result
 
 @router.post("/")
 def create_treatment(data: TDto):
-    con = db.get_connection()
-    result = Ts.create_treatment(con, data)
-    con.close()
+    con, pool = get_write_conn()
+    try:
+        result = Ts.create_treatment(con, data)
+    finally:
+        pool.putconn(con)
+
     return result
 
 @router.patch("/{treat_id}/time/{time}")
 def update_treatment_time(treat_id: int, time: int):
-    con = db.get_connection()
-    result = Ts.update_treatment_time(treat_id, time)
+    con, pool = get_write_conn()
+    try:
+        result = Ts.update_treatment_time(treat_id, time)
+    finally:
+        pool.putconn(con)
     
     if not result:
         raise HTTPException(status_code=404, detail="update failed")
-   
-    con.close()
+
     return result

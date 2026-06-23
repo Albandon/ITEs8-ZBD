@@ -1,0 +1,8 @@
+﻿{
+  "doctor_id": 1,
+  "patient_id": 1,
+  "treatment_id": 1,
+  "time": "2025-06-01T10:00:00",
+  "room_id": 1,
+  "status": "SCH"
+}
