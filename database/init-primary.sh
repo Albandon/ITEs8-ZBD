@@ -8,5 +8,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 EOSQL
 
 echo "host replication replicator all scram-sha-256" >> "$PGDATA/pg_hba.conf"
-
 echo "Replication user, slots, and pg_hba.conf configured."
+
+pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" /docker-entrypoint-initdb.d/backup.dump
+echo "Database restored from backup.dump"
