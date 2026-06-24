@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from db import get_read_conn, get_write_conn, primary_pool, _replica_cycle
+from db import get_write_conn, get_write_conn
 import itertools
 import Services.SpecialityService as Ss
 
@@ -7,7 +7,7 @@ router = APIRouter(prefix="/specialities", tags=["Specialities"])
 
 @router.get("/{speciality_id}")
 def get_speciality(speciality_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         speciality = Ss.get_speciality_by_id(con, speciality_id)
     finally:

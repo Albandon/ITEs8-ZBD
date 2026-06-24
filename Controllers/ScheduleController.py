@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from db import get_read_conn, get_write_conn, primary_pool, _replica_cycle
+from db import get_write_conn, get_write_conn
 import itertools
 import Services.ScheduleService as Scs
 from DTOs.ScheduleDTOs import CreateScheduleRegularDTO, CreateScheduleModificationDTO
@@ -48,7 +48,7 @@ def update_regular_schedule(schedule: CreateScheduleRegularDTO):
 
 @router.get("/available")
 def get_available_slots(doctor_id: int, treatment_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         slots = Scs.get_available_slots(con, doctor_id, treatment_id)
     finally:

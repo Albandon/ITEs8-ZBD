@@ -1,5 +1,5 @@
 ﻿from psycopg2.extras import execute_values
-import db
+from db import get_write_conn
 from datetime import date, time
 
 from DTOs.ScheduleDTOs import CreateScheduleRegularDTO
@@ -9,16 +9,40 @@ from Services.TreatmentService import create_treatment
 from Services.SpecialityService import create_speciality
 
 def generate_mock_data():
-    conn = db.get_connection()
+    conn, pool = get_write_conn()
+    conn.rollback()
 
     try:
+        print("initializing")
         init(conn)
+        print("generating doctors")
         generate_doctors(conn)
+
+        # check right before commit
+        cur = conn.cursor()
+        cur.execute("SELECT inet_server_addr(), inet_server_port();")
+        print(f"Connected to: {cur.fetchone()}")
+
+        cur.execute('SELECT COUNT(*) FROM "Doctors"')
+        print(f"Doctors in transaction: {cur.fetchone()[0]}")
+        cur.execute('SELECT COUNT(*) FROM "Clinics"')
+        print(f"Clinics in transaction: {cur.fetchone()[0]}")
+
+        print("generating clinics")
         generate_clinics(conn)
+        print("generating rooms")
         generate_rooms(conn)
+        print("generating schedules")
         generate_schedules(conn)
 
         conn.commit()
+        print("committed!")
+
+        cur = conn.cursor()
+        cur.execute('SELECT COUNT(*) FROM "Doctors";')
+        print(f"Doctors after commit: {cur.fetchone()[0]}")
+        cur.execute("SELECT inet_server_addr(), inet_server_port();")
+        print(f"Connected to: {cur.fetchone()}")
 
     except Exception as e:
         print(f"Exception: {e}")
@@ -26,7 +50,7 @@ def generate_mock_data():
         raise e
 
     finally:
-        conn.close()
+        pool.putconn(conn)
         print("Data generated!")
 
 def init(conn):
@@ -44,9 +68,9 @@ def generate_doctors(conn):
                "Paw", "Jakub", "Swat", "Brzydal", "Kule", "Kra", "Paster", "Wyj"]
     lname_s = ["ski", "czyk", "ak", "owski", "ewicz"]
 
-    values = []
-
     for first_name in fname:
+        values = []
+
         for last_name_prefix in lname_p:
             for last_name_suffix in lname_s:
                 values.append((first_name, last_name_prefix + last_name_suffix, "M"))
@@ -99,14 +123,15 @@ def generate_rooms(conn):
 
     values = []
 
-    for c_id in clinics:
-        values.append((1, c_id, f"Gabinet {c_id}"))
+    for r_no in range(1, 5):
+        for c_id in clinics:
+            values.append((1, c_id, f"Gabinet {c_id}-{r_no}"))
 
-    execute_values(cur, """
-        INSERT INTO "Rooms" (speciality_id, clinic_id, room_name)
-        VALUES %s
-        ON CONFLICT DO NOTHING
-    """, values)
+        execute_values(cur, """
+            INSERT INTO "Rooms" (speciality_id, clinic_id, room_name)
+            VALUES %s
+            ON CONFLICT DO NOTHING
+        """, values)
 
 def generate_schedules(conn):
     cur = conn.cursor()
@@ -137,3 +162,6 @@ def generate_schedules(conn):
             )
 
             create_regular_schedule(conn, dto)
+
+
+generate_mock_data()

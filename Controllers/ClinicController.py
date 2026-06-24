@@ -1,16 +1,15 @@
 ﻿from fastapi import APIRouter
-from db import get_read_conn, get_write_conn
-import itertools
+from db import get_write_conn, get_write_conn, run_in_threadpool
 import Services.ClinicService as Cs
 from DTOs.ClinicDTOs import Clinic as CDto
 
 router = APIRouter(prefix="/clinics", tags=["Clinics"])
 
 @router.get("/{clinic_id}")
-def get_clinic_by_id(clinic_id: int):
-    con, pool = get_read_conn()
+async def get_clinic_by_id(clinic_id: int):
+    con, pool = get_write_conn()
     try:
-        result = Cs.get_clinic_by_id(con, clinic_id)
+        result = await run_in_threadpool(Cs.get_clinic_by_id, con, clinic_id)
     finally:
         pool.putconn(con)
 
@@ -38,7 +37,7 @@ def create_clinic(clinic_data: CDto):
 
 @router.get("/")
 def get_all_clinics():
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         result = Cs.get_all_clinics(con)
     finally:

@@ -18,13 +18,16 @@ def get_all_clinics(conn):
         }
         for clinic in clinics
     ]
+
 def get_clinic_by_id(conn, clinic_id: int):
     cur = conn.cursor()
     try:
         cur.execute("""
-            SELECT id, address, city
-            FROM "Clinics"
-            WHERE id = %s
+            SELECT c.*, COUNT(r.id) as room_count
+            FROM "Clinics" c
+            LEFT JOIN "Rooms" r ON r.clinic_id = c.id
+            GROUP BY c.id
+            ORDER BY room_count DESC
         """, (clinic_id,))
 
         data = cur.fetchone()

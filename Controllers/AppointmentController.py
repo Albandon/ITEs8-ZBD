@@ -1,5 +1,5 @@
 ﻿from fastapi import APIRouter, HTTPException
-from db import get_read_conn, get_write_conn
+from db import get_write_conn, get_write_conn
 import itertools
 import Services.AppointmentService as As
 import DTOs.AppointmentDTOs as Ads
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/appointments", tags=["Appointments"])
 
 @router.get("/{appointment_id}")
 def get_appointment_by_id(appointment_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         appointment = As.get_appointment_by_id(con, appointment_id)
     finally:
@@ -21,7 +21,7 @@ def get_appointment_by_id(appointment_id: int):
 
 @router.get("/patient/{patient_id}")
 def get_by_patient(patient_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         appointments = As.get_appointments_by_patient_id(con, patient_id)
     finally:

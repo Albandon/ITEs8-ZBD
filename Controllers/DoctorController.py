@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from db import get_read_conn, get_write_conn, primary_pool, _replica_cycle
+from db import get_write_conn, get_write_conn
 import itertools
 import Services.DoctorService as Ds
 import DTOs.DoctorDTOs as DDs
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/doctors", tags=["Doctors"])
 
 @router.get("/search")
 def search_by_name(query: str):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         doctors = Ds.search_doctors_by_name(con, query)
     finally:
@@ -18,7 +18,7 @@ def search_by_name(query: str):
 
 @router.get("/speciality/{speciality_id}")
 def search_by_speciality(speciality_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         doctors = Ds.search_doctors_by_speciality_id(con, speciality_id)
     finally:
@@ -28,7 +28,7 @@ def search_by_speciality(speciality_id: int):
 
 @router.get("/{doctor_id}")
 def get_doctor(doctor_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         doctor = Ds.get_doctor_by_id(con, doctor_id)
     finally:
@@ -74,7 +74,7 @@ def update_password(doctor_id: int, password: str):
 
 @router.get("/{doctor_id}/login-info")
 def get_login_info(doctor_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         info = Ds.get_doctor_login_info_by_doctor_id(con, doctor_id)
     finally:

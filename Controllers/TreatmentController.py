@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from db import get_read_conn, get_write_conn, primary_pool, _replica_cycle
+from db import get_write_conn, get_write_conn
 import itertools
 import Services.TreatmentService as Ts
 from DTOs.TreatmentDTOs import Treatment as TDto
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/treatments", tags=["Treatments"])
 
 @router.get("/{treat_id}")
 def get_treatment_by_id(t_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         result = Ts.get_treatment_by_id(con, t_id)
     finally:
@@ -18,7 +18,7 @@ def get_treatment_by_id(t_id: int):
 
 @router.get("/{treat_id}/time")
 def get_treatment_time(t_id: int):
-    con, pool = get_read_conn()
+    con, pool = get_write_conn()
     try:
         result = Ts.get_treatment_time_by_id(con, t_id)
     finally:
